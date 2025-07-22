@@ -1,7 +1,7 @@
 import logging
 import os
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from math import ceil
 
@@ -58,64 +58,76 @@ def calculate_the_fee(auto: AutoMobile) -> dict[str, float]:
     cars_price = float_price(auto.brutto_price())
     cars_engine_capacity = auto.engine_capacity_cm3()
     if cars_age.years < 3:
-        if cars_price <= 8500:
-            rate = 0.54
-            at_least = 3.5  # euro for 1 cm^3
-        elif cars_price <= 16700:
-            rate = 0.48
-            at_least = 5.5
-        elif cars_price <= 84500:
-            rate = 0.48
-            at_least = 7.5
-        elif cars_price <= 169000:
-            rate = 0.48
-            at_least = 15
-        else:
-            rate = 0.48
-            at_least = 20
-        percentage_fee = {
-            "by_percentage": cars_price * rate,
-            "by_engine_capacity": cars_engine_capacity * at_least,
-            "chosen": max(cars_price * rate, cars_engine_capacity * at_least)
-        }
+        percentage_fee = calc_fee_car_less_3_years(cars_price, cars_engine_capacity)
     elif cars_age.years < 5:
-        if cars_engine_capacity <= 1000:
-            at_least = 1.5
-        elif cars_engine_capacity <= 1500:
-            at_least = 1.7
-        elif cars_engine_capacity <= 1800:
-            at_least = 2.5
-        elif cars_engine_capacity <= 2300:
-            at_least = 2.7
-        elif cars_engine_capacity <= 3000:
-            at_least = 3.
-        else:
-            at_least = 3.6
-        percentage_fee = {
-            "by_percentage": 0,
-            "by_engine_capacity": cars_engine_capacity * at_least,
-            "chosen": cars_engine_capacity * at_least,
-        }
+        percentage_fee = calc_fee_car_less_5_years(cars_engine_capacity)
     else:
-        if cars_engine_capacity <= 1000:
-            at_least = 3.
-        elif cars_engine_capacity <= 1500:
-            at_least = 3.2
-        elif cars_engine_capacity <= 1800:
-            at_least = 3.5
-        elif cars_engine_capacity <= 2300:
-            at_least = 4.8
-        elif cars_engine_capacity <= 3000:
-            at_least = 5.
-        else:
-            at_least = 5.7
-        percentage_fee = {
-            "by_percentage": 0,
-            "by_engine_capacity": cars_engine_capacity * at_least,
-            "chosen": cars_engine_capacity * at_least,
-        }
+        percentage_fee = calc_fee_car_other(cars_engine_capacity)
     return percentage_fee
 
+
+def calc_fee_car_less_3_years(price: float, capacity: int) -> dict[str, float]:
+    if price <= 8500:
+        rate = 0.54
+        at_least = 3.5  # euro for 1 cm^3
+    elif price <= 16700:
+        rate = 0.48
+        at_least = 5.5
+    elif price <= 84500:
+        rate = 0.48
+        at_least = 7.5
+    elif price <= 169000:
+        rate = 0.48
+        at_least = 15
+    else:
+        rate = 0.48
+        at_least = 20
+    percentage_fee = {
+        "by_percentage": price * rate,
+        "by_engine_capacity": capacity * at_least,
+        "chosen": max(price * rate, capacity * at_least)
+    }
+    return percentage_fee
+
+def calc_fee_car_less_5_years(capacity: int) -> dict[str, float]:
+    if capacity <= 1000:
+        at_least = 1.5
+    elif capacity <= 1500:
+        at_least = 1.7
+    elif capacity <= 1800:
+        at_least = 2.5
+    elif capacity <= 2300:
+        at_least = 2.7
+    elif capacity <= 3000:
+        at_least = 3.
+    else:
+        at_least = 3.6
+    percentage_fee = {
+        "by_percentage": 0,
+        "by_engine_capacity": capacity * at_least,
+        "chosen": capacity * at_least,
+    }
+    return percentage_fee
+
+def calc_fee_car_other(capacity: int) -> dict[str, float]:
+    if capacity <= 1000:
+        at_least = 3.
+    elif capacity <= 1500:
+        at_least = 3.2
+    elif capacity <= 1800:
+        at_least = 3.5
+    elif capacity <= 2300:
+        at_least = 4.8
+    elif capacity <= 3000:
+        at_least = 5.
+    else:
+        at_least = 5.7
+    percentage_fee = {
+        "by_percentage": 0,
+        "by_engine_capacity": capacity * at_least,
+        "chosen": capacity * at_least,
+    }
+    return percentage_fee
 
 def float_price(price: str) -> float:
     return float(price.split(' ')[0].replace('.', '').replace(',', '.'))
